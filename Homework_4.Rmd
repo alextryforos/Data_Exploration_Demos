@@ -1,0 +1,109 @@
+---
+title: "Homework_4"
+author: "Alex Tryforos"
+date: "10/4/2019"
+output: html_document
+---
+
+```{r setup, include=TRUE, warning=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#6a
+```{r, warning=FALSE, message=FALSE}
+set.seed(1)
+library(ISLR)
+library(tidyverse)
+library(rsample)
+library(Metrics)
+data = Wage %>% select(wage,age)
+data_split = initial_split(data,prop=0.8)
+data_train = training(data_split)
+data_test = testing(data_split)
+data_test_clean = as.data.frame(data_test[,-2])
+colnames(data_test_clean) = "age"
+folds=5
+ndegree=8
+cv_data = vfold_cv(data_train, v=folds) %>%  mutate(
+    # Extract the train dataframe for each split
+    train = map(splits, ~training(.x)), 
+    # Extract the validate dataframe for each split
+    validate = map(splits, ~testing(.x)),
+    #get actual validate values
+    validate_actual = map(splits,~testing(.x)$wage)
+  )
+#create degree hyperparameter
+cv_data=cv_data %>% crossing(degree=1:ndegree) 
+#fit models
+cv_model_tune_poly <- cv_data %>% 
+  mutate(model = map2(.x = train, .y = degree, ~lm(wage~poly(age,.y), data=.x)))
+#predict models on validation sets
+cv_pred <- cv_model_tune_poly %>% 
+  mutate(validate_predicted = map2(.x = model, .y = validate, ~predict(.x, .y)))
+#calculate mse
+cv_pred=cv_pred %>% 
+  mutate(validate_mse = map2_dbl(.x = validate_actual, .y = validate_predicted, ~mse(actual = .x, predicted = .y)))
+(cv_pred = cv_pred %>% group_by(degree) %>% summarise(mse=mean(validate_mse)))
+cv_pred %>% ggplot(aes(x=degree,y=mse))+geom_line(col="blue") + scale_x_discrete(name="Degree", limits=1:ndegree)
+```
+
+
+Degree 4 seems to produce the lowest average mse (1582.64) across 5 fold cv. Let's train one final model of degree 4 on the entire train set and see how we do on the independent test set.
+
+```{r}
+final_model = lm(wage~poly(age,4), data=data_train)
+data_train$prediction = predict(final_model,data=data_train)
+#training set fit
+ggplot(data_train,aes(x=age,y=wage))+geom_point(size=0.5,col="black")+geom_line(aes(y=prediction), size=1, col="red") + ggtitle("Training Set Fit")
+print(paste("The test set MSE is: ", round(mse(actual = data_test$wage,predicted=predict(final_model,data=data_test))),digits=2))
+```
+
+ANOVA Method
+```{r}
+fit.1 = lm(wage~poly(age, 1), data=Wage)
+fit.2 = lm(wage~poly(age, 2), data=Wage)
+fit.3 = lm(wage~poly(age, 3), data=Wage)
+fit.4 = lm(wage~poly(age, 4), data=Wage)
+fit.5 = lm(wage~poly(age, 5), data=Wage)
+fit.6 = lm(wage~poly(age, 6), data=Wage)
+fit.7 = lm(wage~poly(age, 7), data=Wage)
+fit.8 = lm(wage~poly(age, 8), data=Wage)
+fit.9 = lm(wage~poly(age, 9), data=Wage)
+fit.10 = lm(wage~poly(age, 10), data=Wage)
+anova(fit.1, fit.2, fit.3, fit.4, fit.5, fit.6, fit.7, fit.8, fit.9, fit.10)
+```
+
+
+It seems all models above degree 3 are insignificant. Thus, the definition of "best" between  ANOVA and 5-fold CV disagree.
+
+
+#10
+```{r, warning=FALSE, message=FALSE}
+library(olsrr)
+library(mgcv)
+set.seed(1)
+college_split = initial_split(College,prop=0.7)
+college_train = training(college_split)
+college_test = testing(college_split)
+for_fit = ols_step_forward_p(lm(Outstate ~ ., data = college_train))
+#creating gamfit
+gam_fit = gam(Outstate~s(Enroll) + s(Room.Board) + s(Top10perc) + s(Grad.Rate) +  s(Apps) + s(Accept) + s(F.Undergrad) + s(Books) + s(Personal) + s(PhD) + Private + s(Terminal) + s(S.F.Ratio) + s(perc.alumni) + s(Expend),data=college_train, method="REML")
+par(mfrow = c(2, 2))
+plot(gam_fit)
+```
+
+
+The forward selection selected all but two variables as predictors. Most of the variables seem to have a linear or simply just a constant (horizontal line) relationship with Outstate within this model. In particular, Expend and Apps appear to be the only two covariate with a curvilinear relationship with the response. Looking at the EDF from our model summary confirms this as these two covariates are around 5 while most others are around 1 (essentially linear).
+
+6c
+```{r}
+preds=unname(predict(gam_fit,newdata=college_test))
+print(paste("The test set mse is: ", round(mse(college_test$Outstate,preds), digits=3)))
+results = data.frame(preds,college_test$Outstate)
+colnames(results) = c("Predictions", "Actual")
+ggplot(results,aes(x=Actual,y=Predictions)) + geom_point(size=0.5) + geom_smooth(method='lm')
+```
+
+
+The coorelation between the actual values and the predicted values track pretty well. There is one clear outlier but aside from that things look good.

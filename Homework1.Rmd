@@ -1,0 +1,333 @@
+---
+title: "Homework 1"
+author: "Alex Tryforos"
+date: "8/27/2019"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#1, 2, & 3
+```{r}
+#1 Create vector of positive intgers less than (but not equal to) 100
+(v1 = seq(from=1, to=99, by=2.0))
+#2 Remove values greater than 60 and less than 80
+(v2 = v1[v1<60 | v1>80])
+#3 Find variance of v2
+var(v2)
+```
+
+#4
+```{r}
+#4 Create a dataframe
+cone = data.frame(R=c(2.27,1.98,1.69,1.88,1.64,2.14), H=c(8.28, 8.04, 9.06, 8.70, 7.58, 8.34))
+#Append Volume
+cone$V = pi*cone$R**2*cone$H/3
+cone
+```
+
+#5
+```{r}
+#Find the intercept and slope
+x = matrix(c(1,1,1,1,3.15, -0.55, -0.35, 0.16),4,2)
+y = c(2.93, -0.35, -0.25, -0.12)
+
+(mat=solve(t(x)%*%x)%*%t(x)%*%y)
+x=as.data.frame(x)
+lm(y~V2, data=x)
+```
+
+#6, 7, & 8
+```{r}
+#6 Installing/Loading Packages
+library(MASS)
+data(cats)
+head(cats)
+
+#7 tables for males and females
+table(cats$Sex)
+
+#8 Compare Mean and SD of bods weights for male and females
+#females
+mean(cats$Bwt[cats$Sex=="F"])
+sd(cats$Bwt[cats$Sex=="F"])
+#males
+mean(cats$Bwt[cats$Sex=="M"])
+sd(cats$Bwt[cats$Sex=="M"])
+```
+
+Mean bodyweight for females is 2.359 with a standard deviation of 0.273.
+Mean bodyweight for males is 2.9 with a standard deviation of 0.467.
+
+#9 & 10
+```{r}
+#9 Find the proportion of male and female cats whose body weights are over 2.5 kilograms
+#females
+nrow(subset(cats, Sex == "F" & Bwt>2.5))/nrow(subset(cats, Sex =="F"))
+nrow(subset(cats, Sex == "M" & Bwt>2.5))/nrow(subset(cats, Sex =="M"))
+
+#10
+#Creating lists that consist only male and female cats
+catsF = cats[cats$Sex=="F",]
+catsM = cats[cats$Sex=="M",]
+
+```
+23.4 Percent of females are above 2.5 kilograms.
+74.4 Percent of males are above 2.5 kilograms.
+
+
+
+#Central Limit Theorem Exercise for Normal Distribution
+n=3 from normal distribution
+```{r}
+#Normal Distribution with N=10,000
+#n=3
+normsamp <- rnorm(10000,mean = 10, sd=5)
+par(mfrow=c(2,1),mar=c(4,5,2,1), cex.lab=1.3, cex.axis=1.1, cex.main=1.4)
+hist(normsamp,nclass=100,freq=F,main="Histogram with density curve",col=grey(0.8))
+
+y <- seq(from=2,to=18,le=700)
+lines(y,dnorm(y,mean = 10, sd=5),type="l",col="blue",lwd=2,xlab="",ylab="Density")
+
+norm.mean <- rep(0,2000)
+for (i in 1:2000){
+  norm.subset <- sample(normsamp,size=3,replace=T)
+  norm.mean[i] <- mean(norm.subset)
+}
+
+hist(norm.mean,nclass=100,freq=F,xlab="Sample mean",main="Sampling distribution of mean with n=3")
+lines(density(norm.mean,bw=0.5),col="blue",lwd=2)
+```
+
+n=10 from normal distribution
+```{r}
+#Normal Distribution with N=10,000
+#n=10
+normsamp <- rnorm(10000,mean = 10, sd=5)
+par(mfrow=c(2,1),mar=c(4,5,2,1), cex.lab=1.3, cex.axis=1.1, cex.main=1.4)
+hist(normsamp,nclass=100,freq=F,main="Histogram with density curve",col=grey(0.8))
+
+y <- seq(from=2,to=18,le=700)
+lines(y,dnorm(y,mean = 10, sd=5),type="l",col="blue",lwd=2,xlab="",ylab="Density")
+
+norm.mean <- rep(0,2000)
+for (i in 1:2000){
+  norm.subset <- sample(normsamp,size=10,replace=T)
+  norm.mean[i] <- mean(norm.subset)
+}
+
+hist(norm.mean,nclass=100,freq=F,xlab="Sample mean",main="Sampling distribution of mean with n=10")
+lines(density(norm.mean,bw=0.25),col="blue",lwd=2)
+```
+
+n=50 from normal distribution
+```{r}
+#Normal Distribution with N=10,000
+#n=50
+normsamp <- rnorm(10000,mean = 10, sd=5)
+par(mfrow=c(2,1),mar=c(4,5,2,1), cex.lab=1.3, cex.axis=1.1, cex.main=1.4)
+hist(normsamp,nclass=100,freq=F,main="Histogram with density curve",col=grey(0.8))
+
+y <- seq(from=2,to=18,le=700)
+lines(y,dnorm(y,mean = 10, sd=5),type="l",col="blue",lwd=2,xlab="",ylab="Density")
+
+norm.mean <- rep(0,2000)
+for (i in 1:2000){
+  norm.subset <- sample(normsamp,size=50,replace=T)
+  norm.mean[i] <- mean(norm.subset)
+}
+
+hist(norm.mean,nclass=100,freq=F,xlab="Sample mean",main="Sampling distribution of mean with n=50")
+lines(density(norm.mean,bw=0.15),col="blue",lwd=2)
+```
+
+n = 100 from normal distribution
+```{r}
+#Normal Distribution with N=10,000
+#n=100
+normsamp <- rnorm(10000,mean = 10, sd=5)
+par(mfrow=c(2,1),mar=c(4,5,2,1), cex.lab=1.3, cex.axis=1.1, cex.main=1.4)
+hist(normsamp,nclass=100,freq=F,main="Histogram with density curve",col=grey(0.8))
+
+y <- seq(from=2,to=18,le=700)
+lines(y,dnorm(y,mean = 10, sd=5),type="l",col="blue",lwd=2,xlab="",ylab="Density")
+
+norm.mean <- rep(0,2000)
+for (i in 1:2000){
+  norm.subset <- sample(normsamp,size=100,replace=T)
+  norm.mean[i] <- mean(norm.subset)
+}
+
+hist(norm.mean,nclass=100,freq=F,xlab="Sample mean",main="Sampling distribution of mean with n=100")
+lines(density(norm.mean,bw=0.1),col="blue",lwd=2)
+```
+
+n = 3 from exponential disitribution
+```{r}
+#Exponential Distribution with N=10,000
+#n=3
+expsamp <- rexp(10000,rate = 0.8)
+par(mfrow=c(2,1),mar=c(4,5,2,1), cex.lab=1.3, cex.axis=1.1, cex.main=1.4)
+hist(expsamp,nclass=100,freq=F,main="Histogram with density curve",col=grey(0.8))
+
+y <- seq(from=0,to=18,le=700)
+lines(y,dexp(y,rate=0.8),type="l",col="blue",lwd=2,xlab="",ylab="Density")
+
+exp.mean <- rep(0,2000)
+for (i in 1:2000){
+  exp.subset <- sample(expsamp,size=3,replace=T)
+  exp.mean[i] <- mean(exp.subset)
+}
+
+hist(exp.mean,nclass=100,freq=F,xlab="Sample mean",main="Sampling distribution of mean with n=3")
+lines(density(exp.mean,bw=0.5),col="blue",lwd=2)
+
+```
+
+n = 10 from exponential distribution
+```{r}
+#Exponential Distribution with N=10,000
+#n=10
+expsamp <- rexp(10000,rate = 0.8)
+par(mfrow=c(2,1),mar=c(4,5,2,1), cex.lab=1.3, cex.axis=1.1, cex.main=1.4)
+hist(expsamp,nclass=100,freq=F,main="Histogram with density curve",col=grey(0.8))
+
+y <- seq(from=0,to=18,le=700)
+lines(y,dexp(y,rate=0.8),type="l",col="blue",lwd=2,xlab="",ylab="Density")
+
+exp.mean <- rep(0,2000)
+for (i in 1:2000){
+  exp.subset <- sample(expsamp,size=10,replace=T)
+  exp.mean[i] <- mean(exp.subset)
+}
+
+hist(exp.mean,nclass=100,freq=F,xlab="Sample mean",main="Sampling distribution of mean with n=10")
+lines(density(exp.mean,bw=0.25),col="blue",lwd=2)
+```
+
+n = 50 from exponential distribution
+```{r}
+#Exponential Distribution with N=10,000
+#n=3
+expsamp <- rexp(10000,rate = 0.8)
+par(mfrow=c(2,1),mar=c(4,5,2,1), cex.lab=1.3, cex.axis=1.1, cex.main=1.4)
+hist(expsamp,nclass=100,freq=F,main="Histogram with density curve",col=grey(0.8))
+
+y <- seq(from=0,to=18,le=700)
+lines(y,dexp(y,rate=0.8),type="l",col="blue",lwd=2,xlab="",ylab="Density")
+
+exp.mean <- rep(0,2000)
+for (i in 1:2000){
+  exp.subset <- sample(expsamp,size=50,replace=T)
+  exp.mean[i] <- mean(exp.subset)
+}
+
+hist(exp.mean,nclass=100,freq=F,xlab="Sample mean",main="Sampling distribution of mean with n=50")
+lines(density(exp.mean,bw=0.15),col="blue",lwd=2)
+```
+
+n = 100 from exponential distribution
+```{r}
+#Exponential Distribution with N=10,000
+#n=3
+expsamp <- rexp(10000,rate = 0.8)
+par(mfrow=c(2,1),mar=c(4,5,2,1), cex.lab=1.3, cex.axis=1.1, cex.main=1.4)
+hist(expsamp,nclass=100,freq=F,main="Histogram with density curve",col=grey(0.8))
+
+y <- seq(from=0,to=18,le=700)
+lines(y,dexp(y,rate=0.8),type="l",col="blue",lwd=2,xlab="",ylab="Density")
+
+exp.mean <- rep(0,2000)
+for (i in 1:2000){
+  exp.subset <- sample(expsamp,size=100,replace=T)
+  exp.mean[i] <- mean(exp.subset)
+}
+
+hist(exp.mean,nclass=100,freq=F,xlab="Sample mean",main="Sampling distribution of mean with n=100")
+lines(density(exp.mean,bw=0.1),col="blue",lwd=2)
+```
+
+n = 3 from binomial distribution
+```{r,warning=FALSE}
+#Binomial Distribution with N=10,000
+#n=3
+x <- rbinom(n =  10000, 1,p = 0.1)
+par(mfrow=c(2,1),mar=c(4,5,2,1), cex.lab=1.3, cex.axis=1.1, cex.main=1.4)
+hist(x,freq=F,main="Histogram with density curve",col=grey(0.8))
+
+y <- seq(from=0,to=1,le=20)
+lines(y,dbinom(y,1,p=0.1),type="l",col="blue",lwd=2,xlab="",ylab="Density")
+
+x.mean <- rep(0,2000)
+for (i in 1:2000){
+  x.subset <- sample(x,size=3,replace=T)
+  x.mean[i] <- mean(x.subset)
+}
+hist(x.mean,nclass=7,freq=F,xlab="Sample mean",main="Sampling distribution of mean with n=3")
+lines(density(x.mean,bw=0.15),col="blue",lwd=2)
+```
+
+n = 10 from binomial distribution
+```{r,warning=FALSE}
+#Binomial Distribution with N=10,000
+#n=10
+x <- rbinom(n =  10000, 1,p = 0.1)
+par(mfrow=c(2,1),mar=c(4,5,2,1), cex.lab=1.3, cex.axis=1.1, cex.main=1.4)
+hist(x,freq=F,main="Histogram with density curve",col=grey(0.8))
+
+y <- seq(from=0,to=1,le=20)
+lines(y,dbinom(y,1,p=0.1),type="l",col="blue",lwd=2,xlab="",ylab="Density")
+
+x.mean <- rep(0,2000)
+for (i in 1:2000){
+  x.subset <- sample(x,size=10,replace=T)
+  x.mean[i] <- mean(x.subset)
+}
+hist(x.mean,nclass=7,freq=F,xlab="Sample mean",main="Sampling distribution of mean with n=10")
+lines(density(x.mean,bw=0.1),col="blue",lwd=2)
+```
+
+n = 50 from binomial distribution
+```{r,warning=FALSE}
+#Binomial Distribution with N=10,000
+#n=50
+x <- rbinom(n =  10000, 1,p = 0.1)
+par(mfrow=c(2,1),mar=c(4,5,2,1), cex.lab=1.3, cex.axis=1.1, cex.main=1.4)
+hist(x,freq=F,main="Histogram with density curve",col=grey(0.8))
+
+y <- seq(from=0,to=1,le=20)
+lines(y,dbinom(y,1,p=0.1),type="l",col="blue",lwd=2,xlab="",ylab="Density")
+
+x.mean <- rep(0,2000)
+for (i in 1:2000){
+  x.subset <- sample(x,size=50,replace=T)
+  x.mean[i] <- mean(x.subset)
+}
+hist(x.mean,nclass=7,freq=F,xlab="Sample mean",main="Sampling distribution of mean with n=50")
+lines(density(x.mean,bw=0.05),col="blue",lwd=2)
+```
+
+n = 100 from binomial distribution
+```{r,warning=FALSE}
+#Binomial Distribution with N=10,000
+#n=100
+x <- rbinom(n =  10000, 1,p = 0.1)
+par(mfrow=c(2,1),mar=c(4,5,2,1), cex.lab=1.3, cex.axis=1.1, cex.main=1.4)
+hist(x,freq=F,main="Histogram with density curve",col=grey(0.8))
+
+y <- seq(from=0,to=1,le=20)
+lines(y,dbinom(y,1,p=0.1),type="l",col="blue",lwd=2,xlab="",ylab="Density")
+
+x.mean <- rep(0,2000)
+for (i in 1:2000){
+  x.subset <- sample(x,size=100,replace=T)
+  x.mean[i] <- mean(x.subset)
+}
+hist(x.mean,nclass=7,freq=F,xlab="Sample mean",main="Sampling distribution of mean with n=100")
+lines(density(x.mean,bw=0.05),col="blue",lwd=2)
+```
+

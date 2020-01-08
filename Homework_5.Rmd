@@ -1,0 +1,73 @@
+---
+title: "Homework_5"
+author: "Alex Tryforos"
+date: "10/21/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+8
+```{r, warning=FALSE}
+library(tidyverse)
+library(rsample)
+library(Metrics)
+library(ISLR)
+library(randomForest)
+library(rpart)
+#a
+data = Carseats
+set.seed(1)
+data_split = initial_split(data,prop=0.75)
+data_train = training(data_split)
+data_test = testing(data_split)
+
+#b
+tree_model=rpart(Sales~.,data=data_train)
+plot(tree_model,uniform = TRUE)
+text(tree_model,use.n = TRUE, cex=0.4)
+prediction = predict(tree_model,newdata = data_test)
+print(paste0("The test set MSE is: ", round(mean((data_test$Sales-prediction)**2),digits = 2)))
+
+#c
+print(paste("The optimial CP value through CV is: ", round(tree_model$cptable[which.min(tree_model$cptable[,"xerror"]),"CP"],digits=3)))
+tree_prune = prune(tree_model, cp=0.027)
+plot(tree_prune,uniform = TRUE)
+text(tree_prune,use.n = TRUE, cex=0.4)
+prediction_prune = predict(tree_prune,newdata = data_test)
+print(paste0("The test set MSE with a pruned tree is: ", round(mean((data_test$Sales-prediction_prune)**2),digits = 2)))
+
+#d
+# m = p
+bag_model = randomForest(Sales ~ ., data = data_train, mtry = ncol(data_train)-1, ntree = 500, 
+    importance = T)
+prediction_bag = predict(bag_model, newdata=data_test)
+print(paste0("The test set MSE via bagging is: ", round(mean((data_test$Sales-prediction_bag)**2),digits = 2)))
+varImpPlot(bag_model, type=2)
+
+#e
+#m = p/3
+forest_model = randomForest(Sales ~ ., data = data_train, mtry = (ncol(data_train)-1)/3, ntree = 500, 
+    importance = T)
+prediction_forest = predict(forest_model, newdata=data_test)
+print(paste0("The test set MSE for a random forest is: ", round(mean((data_test$Sales-prediction_forest)**2),digits = 2)))
+
+#Trying other values above and below p/3 for mtry for part e
+rf = function(mtry){
+  model = randomForest(Sales ~ ., data = data_train, mtry = mtry, ntree = 500, 
+    importance = T)
+predictions = predict(model, newdata=data_test)
+print(paste0("The test set MSE for a random forest with mtry = ",mtry, " is: ", round(mean((data_test$Sales-predictions)**2),digits = 2)))
+}
+rf(2)
+rf(4)
+```
+b) Our regression tree chose to split on ShelveLoc first followed by Price indicating that these two (likely) led to the greatest reduction in MSE which is why they were split upon early on. 
+
+c) Pruning the tree raises the test set MSE marginally, although provides a more easily interpreted tree.
+
+d) ShelveLoc, Price, CompPrice, and Age are most important in predicting Sales in the Bag model.
+
+e) In this instance, choosing p/3 (3.3) as the number of possible of predictors at each split let to an increase in test MSE. Varying mtry to 2 and 4 usually keeps test set MSE between 2.7 and 3.2.

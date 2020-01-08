@@ -1,0 +1,109 @@
+---
+title: "Homeworl_3"
+author: "Alex Tryforos"
+date: "9/13/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+#3.7 #9
+a & b
+```{r, warning=FALSE, message=FALSE}
+#Installing packages
+library(easypackages)
+mypackages = c("ISLR", "GGally", "tidyverse")
+libraries(mypackages)
+
+Auto %>% select(-name) %>% ggpairs(., lower = list(continuous = wrap("smooth", alpha = 0.5, size=0.4)))
+```
+
+c
+```{r}
+model=lm(mpg~.-name,data=Auto)
+summary(model)
+```
+i) According to the F test, there is a relationship between the predictors and the response. F statistics is huge and p value is very small.
+
+ii) Displacement, Weight, Year, Origin all have a statistically significant relationship with MPG.
+
+iii) Holding all other explanatory variables constant, a 1 unit increase in year would result in, on average, 0.75 units increase in MGP.
+
+d
+```{r}
+plot(model)
+```
+
+
+There seems to be a noticable curve to the residuals suggesting that another model may be a better fit or maybe a transformation.
+
+Observation 14 looks like a leverage point. Observations 327 & 329 look like they could be influential observation.
+
+e
+```{r}
+model2 = lm(mpg~cylinders*displacement+displacement*weight, data=Auto)
+summary(model2)
+```
+The interaction between displacement and weight appear to significant.
+
+f
+```{r}
+model3=lm(mpg~log(displacement) + sqrt(weight) + acceleration^2, data=Auto)
+summary(model3)
+plot(model3)
+```
+
+
+This model has a few various transformation combinations. This one doesn't look terrible aside from the fan shape of the variance. This tells me that of a log transformation of the y's still may be a good idea to try going forward.
+
+```{r}
+model4=lm(log(mpg)~.-name,data=Auto)
+summary(model4)
+plot(model4)
+```
+
+Fitting a log transformation on mpg (our response) has reduced the fan shape on the residuals giving what appears to me residual normality and homogeneity of variance.
+
+
+#4.7 #10
+a
+```{r}
+Weekly %>% ggpairs(., lower = list(continuous = wrap("smooth", alpha = 0.5, size=0.4)))
+```
+Year and Volume appear to be pretty strongly correalted (0.842).
+
+b
+```{r}
+logmodel= glm(Direction~.-Year-Today, data=Weekly, family = "binomial")
+summary(logmodel)
+```
+Lag 2 appears to be statistically significant.
+
+
+c
+```{r}
+glm.probs = predict(logmodel, type = "response")
+glm.pred = rep("Down", length(glm.probs))
+glm.pred[glm.probs > 0.5] = "Up"
+raw=table(glm.pred, Weekly$Direction)
+(perc=(raw/length(Weekly$Direction)*100))
+
+print(paste("Our model correctly classified", round(perc[1]+perc[4],digits=3), "percent of the time."))
+print(paste("Our model incorrectly classified", round(perc[2]+perc[3],digits=3), "percent of the time."))
+```
+The type of mistake being made are typically when the parket is going down, our model predicts that it is going up, i.e. we are having a false positive problem. Although, when the market actually goes up, our model predicts correctly most of the time.
+
+```{r}
+train=Weekly %>% 
+  filter(Year>=1990, Year <= 2008)
+test=Weekly %>% 
+  filter(Year>2008)
+lag2mod=glm(Direction~Lag2, train,family="binomial")
+lag2.probs=predict(lag2mod,test,type="response")
+lag2.pred=rep("Down",length(lag2.probs))
+lag2.pred[lag2.probs>0.5]="Up"
+rawlag2=table(lag2.pred,test$Direction)
+perclag2=(rawlag2/length(test$Direction))*100
+```

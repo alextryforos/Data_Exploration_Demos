@@ -1,0 +1,168 @@
+---
+title: "Homework2"
+author: "Alex Tryforos"
+date: "9/5/2019"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, results='hide', include=FALSE}
+install.packages("tidyverse", repos='http://cran.us.r-project.org')
+library(tidyverse)
+library(plotly)
+```
+
+
+#1
+Find the median profit for the companies in the US, UK, France and Germany.
+```{r}
+forbes = read.csv("Forbes2000.csv", header = TRUE)
+
+countries=c("United States", "United Kingdom", "Germany", "France")
+
+country_data=forbes %>% 
+  filter(country==countries) %>%
+  select(profits, country) %>% 
+  group_by(country) %>% 
+  summarise(Median = median(profits, na.rm = TRUE))
+
+print(paste(country_data$country, "has a median profit of: ", country_data$Median))
+
+medi=ggplot(data=country_data,aes(x=country,y=Median))+geom_bar(stat = "identity", fill="Blue", col="Black") + labs(title="Median Profit of Countries", x="Median Profit", y="Country")
+ggplotly(medi) 
+```
+
+#2
+Find all German companies with negative profit.
+```{r}
+neg=forbes %>% 
+  filter(country=="Germany" & profits <0) %>% 
+  select(country,profits, name)
+print(paste(neg$name, "has a  profit totaling to negative", -(neg$profits), "billion"))
+```
+
+#3
+Find the business category to which most of the Bermuda island companies belong.
+```{r}
+berm = forbes %>% 
+  select(category,country) %>% 
+  filter(country=="Bermuda")
+tab=table(berm$category)
+print(paste(names(tab[which.max(tab)]),"is the category to which most Bermuda island companies belong"))
+```
+Most Bermuda island companies are insurnace companies.
+
+#4
+Find the 50 companies in the Forbes dataset with the highest profit plot sales against assets, labelling each point with approriate country name which may need to be abbreviated (using abbreviate) to avoid making the plot look too messy
+```{r}
+forbesnew = forbes %>% 
+  select(profits,sales,country) %>% 
+  top_n(50, wt=profits)
+
+g = ggplot(forbesnew, aes(x=profits, y=sales, label=country)) +
+  geom_point(size=0.5, col="Red") + labs(title="Sales vs. Profits", x="Profits", y="Sales")
+ggplotly(g)
+
+ggplot(forbesnew, aes(x=profits, y=sales, label=country)) +
+  geom_point(size=0.5, col="Blue") + facet_wrap(~country) + labs(title="Profit vs. Sales by Country",x="Profits", y="Sales")+theme(plot.title = element_text(hjust = 0.5))
+```
+
+#5
+Find the average value of sales for the companies in each country
+```{r,warning=FALSE}
+comp_count=forbes %>% 
+  select(country,sales) %>% 
+  group_by(country) %>% 
+  summarise(average=mean(sales,na.rm=TRUE))
+
+print(paste(comp_count$country, "-",round(comp_count$average, digits = 2),"billion"))
+
+plotcount=ggplot(data=comp_count,aes(x=country,y=average))+geom_bar(stat = "identity") + theme(axis.text.x=element_blank())
+ggplotly(plotcount)
+
+```
+
+#6
+Find the number of companies in each country with profits above 5 billion US dollars
+```{r}
+g5 = forbes %>% 
+  select(country,profits) %>% 
+  filter(profits>5) %>% 
+  group_by(country) %>% 
+  count(country)
+
+g5count=ggplot(data=g5,aes(x=country,y=n, col=country))+geom_bar(stat = "identity") + theme(axis.text.x=element_blank(), legend.title = element_blank()) + labs(title="Profits Greater than 5 Billion", y="Number of Companies")
+ggplotly(g5count)
+
+```
+
+
+#7a
+Fit a logistic regression model on the South African Heart Disease Dataset.
+Set the 'Present' as 1 and 'Absent' as 0 for variable 'famhist'.
+```{r}
+data=read.table('SAheart.data.txt', header = TRUE, na.strings = ".", sep=",", row.names = 1)
+
+data[,"famhist"] <- ifelse(data[,"famhist"] == "Present", 1, 0)
+
+```
+
+#7b
+There are 462 observations in the dataset. Randomly split the dataset 
+into 400 observations as the training set. The rest 62 observations as the 
+test set. 
+```{r}
+library(caret)
+split = createDataPartition(y=data$famhist, p=0.865, list=FALSE)
+train=data[split,]
+test=data[-split,]
+```
+
+
+#7c
+Then fit a logistic regression using 'famhist' (now become 0 and 1 binary 
+variable) as the response and all the other variables as the explanatory 
+variables. 
+```{r}
+logit <- glm(famhist~.,data=train, family=binomial)
+summary(logit)
+```
+
+#7d
+Make the prediction on the training and test sets. Using the 0.5 as the 
+cutoff point to get the misclassification rate on the training and test sets, 
+respectively. 
+```{r}
+#training set
+(tab <- table(logit$fit>=0.5,train$famhist))
+print(paste("The misclassifcation rate training set is: ", 1-sum(diag(tab))/sum(tab)))
+#test set
+pred <- predict(logit,test,type="response")
+(tab2 <- table(pred>=0.5,test$famhist))
+print(paste("The misclassifcation rate on test set is: ", 1-sum(diag(tab2))/sum(tab2)))
+
+ 
+```
+
+
+#7e
+```{r}
+library(AUC)
+#training set
+auc.score1 <- auc(roc(logit$fit>=0.5,factor(train$famhist)))
+print(paste("The AUC on the training set classification is: ", auc.score1))
+#testing set
+auc.score2 <- auc(roc(pred,factor(test$famhist)))
+print(paste("The AUC on the test set classification is: ", auc.score2))
+#ROC curve
+spe1 <- specificity(pred,factor(test$famhist))$measure
+sen1 <- sensitivity(pred,factor(test$famhist))$measure
+plot(1-spe1,sen1,xlab="1-Specificity",ylab="Sensitivity",type="l",col="red",lwd=2)
+legend(0.2,0.5,legend=paste("Test model AUC score: ",round(auc.score1,d=3),sep=""))
+```
+
